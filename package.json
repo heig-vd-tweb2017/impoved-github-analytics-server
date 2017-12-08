@@ -1,0 +1,35 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "TWEB - GitHub Analytics - Server side",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha",
+    "lint": "./node_modules/eslint/bin/eslint.js .",
+    "build": "npm run lint && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heig-vd-tweb2017/server.git"
+  },
+  "author": "Michela Zucca & Ludovic Delafontaine",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/heig-vd-tweb2017/server/issues"
+  },
+  "homepage": "https://github.com/heig-vd-tweb2017/server#readme",
+  "dependencies": {
+    "cors": "^2.8.4",
+    "express": "^4.16.1",
+    "moment": "^2.19.0",
+    "superagent": "^3.6.1"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "dirty-chai": "^2.0.1",
+    "eslint": "^4.8.0",
+    "eslint-config-airbnb-base": "^12.0.1",
+    "eslint-plugin-import": "^2.7.0",
+    "mocha": "^3.5.3"
+  }
+}
