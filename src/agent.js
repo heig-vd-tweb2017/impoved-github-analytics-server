@@ -1,5 +1,6 @@
 const request = require('superagent');
 const moment = require('moment');
+const GithubGraphQLApi = require('node-github-graphql');
 
 class Agent {
   /**
@@ -7,22 +8,55 @@ class Agent {
    * @param {JSON object with username and token} credentials The credentials to use.
    * to query GitHub.
    */
-  constructor(credentials) {
-    this.credentials = credentials;
+  constructor(apiUrl, apiToken) {
+    this.githubApi = new GithubGraphQLApi({
+      Promise,
+      url: apiUrl,
+      token: apiToken,
+      debug: false
+    });
   }
 
   /**
-   * Get all the opened issues.
-   * @param {string} owner The GitHub's owner of the repository
+   * Get all the issues.
+   * @param {string} owner The GitHub's owner of the repository.
    * @param {string} repo The repository.
+   * @param {string} dataAge The age of the data.
+   * @param {string} dataGrouping How to group the data.
    * @param {function} dataAreAvailable The function to call when data are available.
    * @param {function} endOfData The function to call when there are no more data.
    */
-  getOpenedIssues(owner, repo, dataAreAvailable, endOfData) {
-    const targetUrl = `https://api.github.com/repos/${owner}/${repo}/issues?state=all`;
+  getIssues(owner, repo, dataAge, dataGrouping, dataAreAvailable, endOfData) {
 
-    const dates = new Map();
-    const users = new Map();
+    // Create the arrays to contain the data based on the data grouping
+    // TODO
+
+    // Get the total number of issues
+    this.githubApi.query(`
+      query ($owner: String! $repo: String! $numberToFetch: Int!) {
+        repository(owner: $owner name: $repo) {
+          issues(first: $numberToFetch orderBy: {field: CREATED_AT direction: ASC}) {
+            totalCount
+          }
+        }
+      }
+    `, {
+      'owner': owner,
+      'repo': repo,
+      'numberToFetch': 1
+    }).then((res) => {
+      const numberOfIssues = res.data.repository.issues.totalCount;
+
+      // Change the number to fetch at a time based on data age and number of issues.
+      // This allows to reduce the number of data retrieved from GitHub.
+      // TODO
+      const numberToFetch = 5;
+
+      // Fetch and retrieve the pages until done
+      fetchAndProcessPage(this.githubApi, numberToFetch, null);
+    }).catch((err) => {
+        console.log(err);
+    });
 
     /**
      * Function called until all the data are fetched.
@@ -30,118 +64,59 @@ class Agent {
      * @param {JSON object with username and token} credentials  The credentials to use
      * to query GitHub.
      */
-    function fetchAndProcessPage(pageUrl, credentials) {
-      request
-        .get(pageUrl)
-        .auth(credentials.username, credentials.token)
-        .end((err, res) => {
-          if (err == null) {
-            res.body.forEach((record) => {
-              const openedDate = moment(record.created_at).format('YYYY-MM-DD');
+    function fetchAndProcessPage(githubApi, numberToFetch, cursorId) {
 
-              // Store the number of opened issues at the given date
-              if (!dates.has(openedDate)) {
-                dates.set(openedDate, 1);
-              } else {
-                dates.set(openedDate, dates.get(openedDate) + 1);
-              }
+      let getAfter = '';
 
-              // Save the user who opened the issue
-              const user = record.user.login;
+      if (cursorId != null) {
+        getAfter = `before: "${cursorId}"`;
+      }
 
-              if (!users.has(user)) {
-                users.set(user, 1);
-              } else {
-                users.set(user, users.get(user) + 1);
-              }
-            });
-
-            dataAreAvailable(null, { users, dates });
-
-            if (res.links.next) {
-              fetchAndProcessPage(res.links.next, credentials);
-            } else {
-              endOfData();
-            }
-          } else {
-            endOfData();
-          }
-        });
-    }
-
-    fetchAndProcessPage(targetUrl, this.credentials);
-  }
-
-  /**
-   * Get all the closed issues.
-   * @param {string} owner The GitHub's owner of the repository
-   * @param {string} repo The repository.
-   * @param {function} dataAreAvailable The function to call when data are available.
-   * @param {function} endOfData The function to call when there are no more data.
-   */
-  getClosedIssues(owner, repo, dataAreAvailable, endOfData) {
-    const targetUrl = `https://api.github.com/repos/${owner}/${repo}/issues?state=all`;
-
-    const dates = new Map();
-    const users = new Map();
-
-    /**
-     * Function called until all the data are fetched.
-     * @param {string} pageUrl The GitHub's API URL.
-     * @param {JSON object with username and token} credentials  The credentials to use
-     * to query GitHub.
-     */
-    function fetchAndProcessPage(pageUrl, credentials) {
-      request
-        .get(pageUrl)
-        .auth(credentials.username, credentials.token)
-        .end((err, res) => {
-          if (err == null) {
-            res.body.forEach((record) => {
-              const openedDate = moment(record.created_at).format('YYYY-MM-DD');
-
-              // Set zero closed issue at the given opened date
-              if (!dates.has(openedDate)) {
-                dates.set(openedDate, 0);
-              }
-
-              // If there is a closed date, we add to the
-              // closed issue at the given closed date
-              if (record.closed_at !== null) {
-                const closedDate = moment(record.closed_at).format('YYYY-MM-DD');
-
-                // Store the number of closed issues at the given date
-                if (!dates.has(closedDate)) {
-                  dates.set(closedDate, 1);
-                } else {
-                  dates.set(closedDate, dates.get(closedDate) + 1);
-                }
-
-                // Save the user who closed the issue
-                const user = record.user.login;
-
-                if (!users.has(user)) {
-                  users.set(user, 1);
-                } else {
-                  users.set(user, users.get(user) + 1);
+      githubApi.query(`
+        query ($owner: String!, $repo: String!, $numberToFetch: Int!) {
+          repository(owner: $owner name: $repo) {
+            issues(last: $numberToFetch ${getAfter} orderBy: {field: CREATED_AT direction: ASC}) {
+              edges {
+                node {
+                  author {
+                    login
+                  }
+                  state
+                  createdAt
+                  closedAt
                 }
               }
-            });
-
-            dataAreAvailable(null, { users, dates });
-
-            if (res.links.next) {
-              fetchAndProcessPage(res.links.next, credentials);
-            } else {
-              endOfData();
+              pageInfo {
+                startCursor
+                endCursor
+                hasNextPage
+                hasPreviousPage
+              }
             }
-          } else {
-            endOfData();
           }
-        });
-    }
+        }
+      `, {
+        'owner': owner,
+        'repo': repo,
+        'numberToFetch': numberToFetch
+      }).then((res) => {
+        // Get data from the respond
+        const pageInfo = res.data.repository.issues.pageInfo;
+        const issues = res.data.repository.issues.edges;
 
-    fetchAndProcessPage(targetUrl, this.credentials);
+        // Process issues
+        console.log(JSON.stringify(issues, null, 2));
+
+        // If there are more pages, retrieve and process them
+        if (pageInfo.hasPreviousPage) {
+          fetchAndProcessPage(githubApi, numberToFetch, pageInfo.startCursor);
+        } else {
+          endOfData();
+        }
+      }).catch((err) => {
+        console.log(err);
+      });
+    }
   }
 }
 

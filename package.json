@@ -22,6 +22,7 @@
     "cors": "^2.8.4",
     "express": "^4.16.1",
     "moment": "^2.19.0",
+    "node-github-graphql": "^0.2.6",
     "superagent": "^3.6.1"
   },
   "devDependencies": {
