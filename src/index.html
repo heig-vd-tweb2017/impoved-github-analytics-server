@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO test</title>
+  </head>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io();
+
+    socket.emit('number-of-issues-by-authors', {
+      owner: 'google',
+      repo: 'WebFundamentals',
+      dataAgeValue: 2,
+      dataAgeUnit: 'weeks',
+    });
+
+    socket.on('number-of-issues-by-authors-results', function (data) {
+      console.log(data);
+    });
+
+    socket.emit('number-of-issues-by-grouping', {
+      owner: 'google',
+      repo: 'WebFundamentals',
+      dataAgeValue: 2,
+      dataAgeUnit: 'weeks',
+      dataAgeGrouping: 'days',
+    });
+
+    socket.on('number-of-issues-by-grouping-results', function (data) {
+      console.log(data);
+    });
+
+  </script>
+  <body>
+  </body>
+</html>

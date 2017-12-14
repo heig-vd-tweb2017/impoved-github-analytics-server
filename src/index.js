@@ -6,7 +6,7 @@ const credentials = require('../src/github-credentials.json');
 
 const port = 5050;
 
-const { username, token } = credentials;
+const { token } = credentials;
 
 // ONLINE DEPLOYMENT
 /*
@@ -17,9 +17,6 @@ const token = process.env.TOKEN;
 
 */
 const agent = new Agent('https://api.github.com/graphql', token);
-agent.getIssuesData('google', 'WebFundamentals', 3, 'months', 'weeks', null, null);
-
-/*
 const server = new Server(port, agent);
+
 server.start();
-*/

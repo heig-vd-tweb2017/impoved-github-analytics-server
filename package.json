@@ -23,6 +23,7 @@
     "express": "^4.16.1",
     "moment": "^2.19.0",
     "node-github-graphql": "^0.2.6",
+    "socket.io": "^2.0.4",
     "superagent": "^3.6.1"
   },
   "devDependencies": {

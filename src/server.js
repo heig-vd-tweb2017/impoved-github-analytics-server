@@ -1,5 +1,7 @@
-const express = require('express');
 const cors = require('cors');
+const app = require('express')().use(cors());
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
 class Server {
   /**
@@ -8,81 +10,56 @@ class Server {
    * @param {Agent} agent The agent to interrogate.
    */
   constructor(port, agent) {
-    this.app = express();
-    this.app.use(cors({
-      credentials: true,
-      origin: true,
-    }));
-
     this.port = port;
-    this.agent = agent;
 
-    this.app.get('/api/opened-issues/:owner/:repo', (req, res) => {
-      const { owner, repo } = req.params;
-
-      res.setHeader('Content-Type', 'application/json');
-
-      res.write('[');
-
-      let prevChunk = null;
-
-      function sendData(err, data) {
-        if (err == null) {
-          if (prevChunk) {
-            res.write(`${JSON.stringify(prevChunk)},`);
-          }
-
-          const users = Array.from(data.users);
-          const dates = Array.from(data.dates);
-
-          prevChunk = { users, dates };
-        }
-      }
-
-      function endOfData() {
-        if (prevChunk) {
-          res.write(JSON.stringify(prevChunk));
-        }
-        res.end(']');
-      }
-
-      this.agent.getOpenedIssues(owner, repo, sendData, endOfData);
+    app.get('/', (req, res) => {
+      res.sendFile(`${__dirname}/index.html`);
     });
 
-    this.app.get('/api/closed-issues/:owner/:repo', (req, res) => {
-      const { owner, repo } = req.params;
+    io.on('connection', (socket) => {
+      socket.on('number-of-issues-by-grouping', (filters) => {
+        const {
+          owner,
+          repo,
+          dataAgeValue,
+          dataAgeUnit,
+          dataAgeGrouping,
+        } = filters;
 
-      res.setHeader('Content-Type', 'application/json');
+        agent.getNumberOfIssuesByGrouping(
+          owner,
+          repo,
+          dataAgeValue,
+          dataAgeUnit,
+          dataAgeGrouping,
+          socket,
+          'number-of-issues-by-grouping-results',
+        )
+          .catch((err) => {
+            console.log(err);
+          });
+      });
 
-      res.write('[');
+      socket.on('number-of-issues-by-authors', (filters) => {
+        const {
+          owner,
+          repo,
+          dataAgeValue,
+          dataAgeUnit,
+        } = filters;
 
-      let prevChunk = null;
-
-      function sendData(err, data) {
-        if (err == null) {
-          if (prevChunk) {
-            res.write(`${JSON.stringify(prevChunk)},`);
-          }
-
-          const users = Array.from(data.users);
-          const dates = Array.from(data.dates);
-
-          prevChunk = { users, dates };
-        }
-      }
-
-      function endOfData() {
-        if (prevChunk) {
-          res.write(JSON.stringify(prevChunk));
-        }
-        res.end(']');
-      }
-
-      this.agent.getClosedIssues(owner, repo, sendData, endOfData);
-    });
-
-    this.app.get('*', (req, res) => {
-      res.send('Error 404 - Page not found.', 404);
+        agent.getNumberOfIssuesByAuthors(
+          owner,
+          repo,
+          dataAgeValue,
+          dataAgeUnit,
+          socket,
+          'number-of-issues-by-authors-results',
+        )
+          .catch((err) => {
+            console.log(err);
+          });
+      });
     });
   }
 
@@ -90,7 +67,9 @@ class Server {
    * Start the server.
    */
   start() {
-    this.app.listen(this.port, () => {});
+    http.listen(this.port, () => {
+      console.log(`Listening on *:${this.port}`);
+    });
   }
 }
 
