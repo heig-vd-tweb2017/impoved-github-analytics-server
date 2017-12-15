@@ -56,7 +56,9 @@ class Server {
           socket,
           'number-of-issues-by-authors-results',
         )
-          .catch((err) => {
+          .then((data) => {
+            // Save the data in the database
+          }).catch((err) => {
             console.log(err);
           });
       });

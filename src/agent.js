@@ -26,7 +26,7 @@ class Agent {
    */
   getNumberOfIssuesByAuthors(owner, repo, dataAgeValue, dataAgeUnit, socket, socketMessage) {
     return new Promise((resolve, reject) => {
-      const authors = {};
+      const authors = [];
 
       const oldestIssuesToFetch = moment().subtract(dataAgeValue, dataAgeUnit);
 
@@ -79,37 +79,76 @@ class Agent {
           issuesData.forEach((issueData) => {
             const issue = issueData.node;
 
-            const author = issue.author.login;
+            let author = 'null';
+
+            if (issue.author != null) {
+              author = issue.author.login;
+            }
+
             const createdDate = moment(issue.createdAt);
             const closedDate = moment(issue.closedAt);
 
             // If the date is in the range, store it
             if (createdDate.isSameOrAfter(oldestIssuesToFetch)) {
               // Add the author if it doesn't exist
-              if (authors[author] == null) {
-                authors[author] = {
+              if (authors.find(element => element.author === author) == null) {
+                authors.push({
+                  author,
                   openedIssues: 0,
                   closedIssues: 0,
-                };
+                });
               }
 
-              authors[author].openedIssues += 1;
+              authors.find(element => element.author === author).openedIssues += 1;
 
               // Only consider the closed issue if the date is valid
               if (closedDate.isValid()) {
-                authors[author].closedIssues += 1;
+                authors.find(element => element.author === author).closedIssues += 1;
               }
             } else {
               datesAlwaysInRange = false;
             }
           });
 
+          // Prepare the best authors based on their opening and closing number of issues
+          let bestOpenedIssuesAuthors = authors;
+          let bestClosedIssuesAuthors = authors;
+
+          // Sort the data
+          bestOpenedIssuesAuthors.sort((author1, author2) => {
+            if (author1.openedIssues > author2.openedIssues) {
+              return -1;
+            } else if (author1.openedIssues < author2.openedIssues) {
+              return 1;
+            }
+
+            return 0;
+          });
+
+          bestClosedIssuesAuthors.sort((author1, author2) => {
+            if (author1.closedIssues > author2.closedIssues) {
+              return -1;
+            } else if (author1.closedIssues < author2.closedIssues) {
+              return 1;
+            }
+
+            return 0;
+          });
+
+          // Keep only a certain % of the best authors to avoid bashing
+          const numberOfAuthorsToKeep = authors.length * 0.15;
+
+          bestOpenedIssuesAuthors = bestOpenedIssuesAuthors.slice(0, numberOfAuthorsToKeep);
+          bestClosedIssuesAuthors = bestClosedIssuesAuthors.slice(0, numberOfAuthorsToKeep);
+
           // Data are available
           const data = {
             age: `${dataAgeValue} ${dataAgeUnit}`,
             start: moment().format('YYYY-MM-DD'),
             end: oldestIssuesToFetch.format('YYYY-MM-DD'),
-            authors,
+            numberOfAuthors: authors.length,
+            bestOpenedIssuesAuthors,
+            bestClosedIssuesAuthors,
           };
 
           socket.emit(socketMessage, { data });
@@ -118,7 +157,7 @@ class Agent {
           if (datesAlwaysInRange && pageInfo.hasPreviousPage) {
             fetchAndProcessPage(githubApi, numberOfElementsToFetch, pageInfo.startCursor);
           } else {
-            resolve();
+            resolve(data);
           }
         }).catch((err) => {
           reject(err);
@@ -150,7 +189,7 @@ class Agent {
     socketMessage,
   ) {
     return new Promise((resolve, reject) => {
-      const issues = {};
+      const issues = [];
       let format = '';
       let subtract = '';
 
@@ -178,10 +217,11 @@ class Agent {
         date.isSameOrAfter(oldestIssuesToFetch);
         date.subtract(1, subtract)
       ) {
-        issues[date.format(format)] = {
+        issues.push({
+          date: date.format(format),
           openedIssues: 0,
           closedIssues: 0,
-        };
+        });
       }
 
       /**
@@ -235,11 +275,13 @@ class Agent {
 
             // If the date is in the range, store it
             if (createdDate.isSameOrAfter(oldestIssuesToFetch)) {
-              issues[createdDate.format(format)].openedIssues += 1;
+              const createdDateFormatted = createdDate.format(format);
+              issues.find(element => element.date === createdDateFormatted).openedIssues += 1;
 
               // Only consider the closed issue if the date is valid
               if (closedDate.isValid()) {
-                issues[closedDate.format(format)].closedIssues += 1;
+                const closedDateFormatted = closedDate.format(format);
+                issues.find(element => element.date === closedDateFormatted).closedIssues += 1;
               }
             } else {
               datesAlwaysInRange = false;
@@ -262,7 +304,7 @@ class Agent {
           if (datesAlwaysInRange && pageInfo.hasPreviousPage) {
             fetchAndProcessPage(githubApi, numberOfElementsToFetch, pageInfo.startCursor);
           } else {
-            resolve();
+            resolve(data);
           }
         }).catch((err) => {
           reject(err);
