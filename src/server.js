@@ -36,7 +36,7 @@ class Server {
           'number-of-issues-by-grouping-results',
         )
           .catch((err) => {
-            console.log(err);
+            socket.emit('number-of-issues-by-grouping-results', { error: err });
           });
       });
 
@@ -59,7 +59,7 @@ class Server {
           .then((data) => {
             // Save the data in the database
           }).catch((err) => {
-            console.log(err);
+            socket.emit('number-of-issues-by-authors-results', { error: err });
           });
       });
     });

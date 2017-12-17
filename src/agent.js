@@ -11,7 +11,7 @@ class Agent {
     this.githubApi = new GithubGraphQLApi({
       url: apiUrl,
       token: apiToken,
-      debug: false,
+      debug: true,
     });
   }
 
@@ -51,6 +51,7 @@ class Agent {
                   node {
                     author {
                       login
+                      url
                     }
                     createdAt
                     closedAt
@@ -79,34 +80,34 @@ class Agent {
           issuesData.forEach((issueData) => {
             const issue = issueData.node;
 
-            let author = 'null';
-
             if (issue.author != null) {
-              author = issue.author.login;
-            }
 
-            const createdDate = moment(issue.createdAt);
-            const closedDate = moment(issue.closedAt);
+              const author = issue.author.login;
+              const profilUrl = issue.author.url;
+              const createdDate = moment(issue.createdAt);
+              const closedDate = moment(issue.closedAt);
 
-            // If the date is in the range, store it
-            if (createdDate.isSameOrAfter(oldestIssuesToFetch)) {
-              // Add the author if it doesn't exist
-              if (authors.find(element => element.author === author) == null) {
-                authors.push({
-                  author,
-                  openedIssues: 0,
-                  closedIssues: 0,
-                });
+              // If the date is in the range, store it
+              if (createdDate.isSameOrAfter(oldestIssuesToFetch)) {
+                // Add the author if it doesn't exist
+                if (authors.find(element => element.author === author) == null) {
+                  authors.push({
+                    author,
+                    profilUrl,
+                    openedIssues: 0,
+                    closedIssues: 0,
+                  });
+                }
+
+                authors.find(element => element.author === author).openedIssues += 1;
+
+                // Only consider the closed issue if the date is valid
+                if (closedDate.isValid()) {
+                  authors.find(element => element.author === author).closedIssues += 1;
+                }
+              } else {
+                datesAlwaysInRange = false;
               }
-
-              authors.find(element => element.author === author).openedIssues += 1;
-
-              // Only consider the closed issue if the date is valid
-              if (closedDate.isValid()) {
-                authors.find(element => element.author === author).closedIssues += 1;
-              }
-            } else {
-              datesAlwaysInRange = false;
             }
           });
 
@@ -141,22 +142,29 @@ class Agent {
           bestOpenedIssuesAuthors = bestOpenedIssuesAuthors.slice(0, numberOfAuthorsToKeep);
           bestClosedIssuesAuthors = bestClosedIssuesAuthors.slice(0, numberOfAuthorsToKeep);
 
-          // Data are available
+          // Create data payload
           const data = {
             age: `${dataAgeValue} ${dataAgeUnit}`,
             start: moment().format('YYYY-MM-DD'),
             end: oldestIssuesToFetch.format('YYYY-MM-DD'),
+            lastData: false,
             numberOfAuthors: authors.length,
             bestOpenedIssuesAuthors,
             bestClosedIssuesAuthors,
           };
 
-          socket.emit(socketMessage, { data });
-
           // If there are more pages, retrieve and process them
           if (datesAlwaysInRange && pageInfo.hasPreviousPage) {
+            // Send the data to the client
+            socket.emit(socketMessage, { data });
+
             fetchAndProcessPage(githubApi, numberOfElementsToFetch, pageInfo.startCursor);
           } else {
+            // Last data to send to the client
+            data.lastData = true;
+            socket.emit(socketMessage, { data });
+
+            // Return the data to the promise
             resolve(data);
           }
         }).catch((err) => {
@@ -293,17 +301,24 @@ class Agent {
             age: `${dataAgeValue} ${dataAgeUnit}`,
             start: moment().format('YYYY-MM-DD'),
             end: oldestIssuesToFetch.format('YYYY-MM-DD'),
+            lastData: false,
             grouping: dataAgeGrouping,
             format,
             issues,
           };
 
-          socket.emit(socketMessage, { data });
-
           // If there are more pages, retrieve and process them
           if (datesAlwaysInRange && pageInfo.hasPreviousPage) {
+            // Send the data to the client
+            socket.emit(socketMessage, { data });
+
             fetchAndProcessPage(githubApi, numberOfElementsToFetch, pageInfo.startCursor);
           } else {
+            // Last data to send to the client
+            data.lastData = true;
+            socket.emit(socketMessage, { data });
+
+            // Return the data to the promise
             resolve(data);
           }
         }).catch((err) => {
