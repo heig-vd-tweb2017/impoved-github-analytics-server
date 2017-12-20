@@ -73,84 +73,81 @@ class Agent {
           const { pageInfo } = res.data.repository.issues;
           const issuesData = res.data.repository.issues.edges;
 
-          // Check if the dates are always in the range
           let datesAlwaysInRange = true;
 
-          // Process issues
-          issuesData.forEach((issueData) => {
+          /**
+           * Function called to filter issues.
+           * @param {Object} issue The issue's data.
+           * @returns {boolean} True the issue has to be kept, false otherwise.
+           */
+          function isIssueValid(issueData) {
             const issue = issueData.node;
 
-            if (issue.author != null) {
+            const { author, createdAt } = issue;
 
-              const author = issue.author.login;
-              const profilUrl = issue.author.url;
-              const createdDate = moment(issue.createdAt);
-              const closedDate = moment(issue.closedAt);
+            // An author can be null if it was deleted by the past
+            if (author == null) {
+              return false;
+            } else if (moment(createdAt).isBefore(oldestIssuesToFetch)) {
+              datesAlwaysInRange = false;
+              return false;
+            }
 
-              // If the date is in the range, store it
-              if (createdDate.isSameOrAfter(oldestIssuesToFetch)) {
-                // Add the author if it doesn't exist
-                if (authors.find(element => element.author === author) == null) {
-                  authors.push({
-                    author,
-                    profilUrl,
-                    openedIssues: 0,
-                    closedIssues: 0,
-                  });
-                }
+            // The issue is kept
+            return true;
+          }
 
-                authors.find(element => element.author === author).openedIssues += 1;
+          const validIssues = issuesData.filter(isIssueValid);
 
-                // Only consider the closed issue if the date is valid
-                if (closedDate.isValid()) {
-                  authors.find(element => element.author === author).closedIssues += 1;
-                }
-              } else {
-                datesAlwaysInRange = false;
-              }
+          // Process issues
+          validIssues.forEach((issueData) => {
+            const issue = issueData.node;
+
+            const author = issue.author.login;
+            const profilUrl = issue.author.url;
+            const closedDate = issue.closedAt;
+
+            // Add the author if it doesn't exist
+            if (authors.find(element => element.author === author) == null) {
+              authors.push({
+                author,
+                profilUrl,
+                openedIssues: 0,
+                closedIssues: 0,
+              });
+            }
+
+            authors.find(element => element.author === author).openedIssues += 1;
+
+            // Only consider the closed issue if the date is valid
+            if (moment(closedDate).isValid()) {
+              authors.find(element => element.author === author).closedIssues += 1;
             }
           });
 
           // Prepare the best authors based on their opening and closing number of issues
-          let bestOpenedIssuesAuthors = authors;
-          let bestClosedIssuesAuthors = authors;
+          let bestOIAuthors = authors;
+          let bestCIAuthors = authors;
 
           // Sort the data
-          bestOpenedIssuesAuthors.sort((author1, author2) => {
-            if (author1.openedIssues > author2.openedIssues) {
-              return -1;
-            } else if (author1.openedIssues < author2.openedIssues) {
-              return 1;
-            }
-
-            return 0;
-          });
-
-          bestClosedIssuesAuthors.sort((author1, author2) => {
-            if (author1.closedIssues > author2.closedIssues) {
-              return -1;
-            } else if (author1.closedIssues < author2.closedIssues) {
-              return 1;
-            }
-
-            return 0;
-          });
+          bestOIAuthors.sort((author1, author2) => author2.openedIssues - author1.openedIssues);
+          bestCIAuthors.sort((author1, author2) => author2.closedIssues - author1.closedIssues);
 
           // Keep only a certain % of the best authors to avoid bashing
           const numberOfAuthorsToKeep = authors.length * 0.15;
 
-          bestOpenedIssuesAuthors = bestOpenedIssuesAuthors.slice(0, numberOfAuthorsToKeep);
-          bestClosedIssuesAuthors = bestClosedIssuesAuthors.slice(0, numberOfAuthorsToKeep);
+          bestOIAuthors = bestOIAuthors.slice(0, numberOfAuthorsToKeep);
+          bestCIAuthors = bestCIAuthors.slice(0, numberOfAuthorsToKeep);
 
           // Create data payload
           const data = {
             age: `${dataAgeValue} ${dataAgeUnit}`,
             start: moment().format('YYYY-MM-DD'),
             end: oldestIssuesToFetch.format('YYYY-MM-DD'),
-            lastData: false,
+            endOfStream: false,
             numberOfAuthors: authors.length,
-            bestOpenedIssuesAuthors,
-            bestClosedIssuesAuthors,
+            bestOpenedIssuesAuthors: bestOIAuthors,
+            bestClosedIssuesAuthors: bestCIAuthors,
           };
 
           // If there are more pages, retrieve and process them
@@ -161,7 +158,7 @@ class Agent {
             fetchAndProcessPage(githubApi, numberOfElementsToFetch, pageInfo.startCursor);
           } else {
             // Last data to send to the client
-            data.lastData = true;
+            data.endOfStream = true;
             socket.emit(socketMessage, { data });
 
             // Return the data to the promise
@@ -271,28 +268,43 @@ class Agent {
           const { pageInfo } = res.data.repository.issues;
           const issuesData = res.data.repository.issues.edges;
 
-          // Check if the dates are always in the range
           let datesAlwaysInRange = true;
 
+          /**
+           * Function called to filter issues.
+           * @param {Object} issueData The issue's data.
+           * @returns {boolean} True the issue has to be kept, false otherwise.
+           */
+          function isIssueValid(issueData) {
+            const issue = issueData.node;
+
+            const { createdAt } = issue;
+
+            if (moment(createdAt).isBefore(oldestIssuesToFetch)) {
+              datesAlwaysInRange = false;
+              return false;
+            }
+
+            // The issue is kept
+            return true;
+          }
+
+          const validIssues = issuesData.filter(isIssueValid);
+
           // Process issues
-          issuesData.forEach((issueData) => {
+          validIssues.forEach((issueData) => {
             const issue = issueData.node;
 
             const createdDate = moment(issue.createdAt);
             const closedDate = moment(issue.closedAt);
 
-            // If the date is in the range, store it
-            if (createdDate.isSameOrAfter(oldestIssuesToFetch)) {
-              const createdDateFormatted = createdDate.format(format);
-              issues.find(element => element.date === createdDateFormatted).openedIssues += 1;
+            const createdDateFormatted = createdDate.format(format);
+            issues.find(element => element.date === createdDateFormatted).openedIssues += 1;
 
-              // Only consider the closed issue if the date is valid
-              if (closedDate.isValid()) {
-                const closedDateFormatted = closedDate.format(format);
-                issues.find(element => element.date === closedDateFormatted).closedIssues += 1;
-              }
-            } else {
-              datesAlwaysInRange = false;
+            // Only consider the closed issue if the date is valid
+            if (closedDate.isValid()) {
+              const closedDateFormatted = closedDate.format(format);
+              issues.find(element => element.date === closedDateFormatted).closedIssues += 1;
             }
           });
 
@@ -301,7 +313,7 @@ class Agent {
             age: `${dataAgeValue} ${dataAgeUnit}`,
             start: moment().format('YYYY-MM-DD'),
             end: oldestIssuesToFetch.format('YYYY-MM-DD'),
-            lastData: false,
+            endOfStream: false,
             grouping: dataAgeGrouping,
             format,
             issues,
@@ -315,7 +327,7 @@ class Agent {
             fetchAndProcessPage(githubApi, numberOfElementsToFetch, pageInfo.startCursor);
           } else {
             // Last data to send to the client
-            data.lastData = true;
+            data.endOfStream = true;
             socket.emit(socketMessage, { data });
 
             // Return the data to the promise
