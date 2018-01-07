@@ -11,7 +11,7 @@ class Agent {
     this.githubApi = new GithubGraphQLApi({
       url: apiUrl,
       token: apiToken,
-      debug: true,
+      debug: false,
     });
   }
 
@@ -134,7 +134,7 @@ class Agent {
           bestCIAuthors.sort((author1, author2) => author2.closedIssues - author1.closedIssues);
 
           // Keep only a certain % of the best authors to avoid bashing
-          const numberOfAuthorsToKeep = authors.length * 0.15;
+          const numberOfAuthorsToKeep = Math.ceil(authors.length * 0.15);
 
           bestOIAuthors = bestOIAuthors.slice(0, numberOfAuthorsToKeep);
           bestCIAuthors = bestCIAuthors.slice(0, numberOfAuthorsToKeep);

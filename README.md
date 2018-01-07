@@ -74,15 +74,13 @@ You can install all the Node.js dependencies by using the following command in t
 npm install
 ```
 
-You can then use the following commands to build and test the application:
+You can then use the following commands to build and test the application after starting all the containers. Look at the `Deployment part`.
 
 ```
 npm run lint  # Runs the ESLint linter for code quality control
 npm run test  # Runs the Mocha framework for testing
 npm run build # Runs the 'lint' and 'test' scripts
 ```
-
-If you want to run the application locally, we recommend you to look at the `Deployment part`.
 
 ## Deployment
 
@@ -96,11 +94,19 @@ app:
     container_name: 'app'
     environment:
       - PORT=5050
-      - TOKEN='<CHANGE THIS>'
+      - TOKEN=CHANGE_THIS
+      - MONGO_DB_HOSTNAME=mongodb:27017
 [...]
 ```
 
-Then you need to launch `docker-compose up` in the cloned directory.
+Then you need to execute the following commands to launch the environment locally:
+```
+cd 'The local cloned directory of the project'
+sudo dockerd # Launch the Docker daemon
+sudo docker-compose up # Launch Docker Compose
+```
+
+This will launch the server locally. You might need to look at the client's `Local deployment` part for a fully working environment.
 
 ### Online deployment (Heroku)
 To deploy the application online, on Heroku for example, you need to set the following environment variables:

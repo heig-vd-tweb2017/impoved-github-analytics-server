@@ -3,7 +3,7 @@
   <head>
     <title>Socket.IO test</title>
   </head>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="http://0.0.0.0:5050/socket.io/socket.io.js"></script>
   <script>
     var socket = io();
 
@@ -11,10 +11,14 @@
       owner: 'google',
       repo: 'WebFundamentals',
       dataAgeValue: 2,
-      dataAgeUnit: 'years',
+      dataAgeUnit: 'months',
     });
 
-    socket.on('number-of-issues-by-authors-results', function (data) {
+    socket.on('number-of-issues-by-authors-results', (data) => {
+      console.log(data);
+    });
+
+    socket.on('number-of-issues-by-authors-old-results', (data) => {
       console.log(data);
     });
 
