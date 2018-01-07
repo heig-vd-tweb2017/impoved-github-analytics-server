@@ -7,7 +7,7 @@ const moment = require('moment');
 class Server {
   /**
    * The constructor.
-   * @param {integer} port The port to listen to if no default one is specified in ENV.
+   * @param {integer} port The port to listen to.
    * @param {Agent} agent The agent to interrogate.
    * @param {Database} database The database where to save the data.
    */
