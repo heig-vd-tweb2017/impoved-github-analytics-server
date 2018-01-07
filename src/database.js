@@ -7,7 +7,7 @@ class Database {
    * @param {string} schemaName The schema's name.
    */
   constructor(mongodbUri) {
-    mongoose.connect(`mongodb://${mongodbUri}`, {
+    mongoose.connect(mongodbUri, {
       useMongoClient: true,
     });
     mongoose.Promise = global.Promise;
