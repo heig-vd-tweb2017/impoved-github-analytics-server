@@ -80,6 +80,14 @@ class Database {
             owner,
             repo,
           })
+          .select({
+            _id: 0,
+            __v: 0,
+          })
+          .sort({
+            date: -1,
+            start: -1,
+          })
           .then((results) => {
             resolve(results);
           })
