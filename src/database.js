@@ -1,4 +1,14 @@
+/*
+eslint class-methods-use-this: ["error", {
+  "exceptMethods": [
+    "saveAuthorsResults",
+    "getAuthorsResults"
+  ]
+}]
+*/
+
 const mongoose = require('mongoose');
+const AuthorsResults = require('./authorsResults.js');
 
 class Database {
   /**
@@ -10,25 +20,10 @@ class Database {
     mongoose.connect(mongodbUri, {
       useMongoClient: true,
     });
-    mongoose.Promise = global.Promise;
+    mongoose.Promise = Promise;
 
-    const db = mongoose.connection;
-    db.on('error', console.error.bind(console, 'connection error:'));
-    db.once('open', () => {
-      // Create the schemas and the models to use with the database
-      const authorsResultsSchema = mongoose.Schema({
-        owner: String,
-        repo: String,
-        date: Date,
-        start: Date,
-        end: Date,
-        age: String,
-        bestOpenedIssuesAuthors: Array,
-        bestClosedIssuesAuthors: Array,
-      });
-
-      this.AuthorsResults = mongoose.model('AuthorResults', authorsResultsSchema);
-    });
+    this.db = mongoose.connection;
+    this.db.on('error', console.error.bind(console, 'connection error:'));
   }
 
   /**
@@ -46,7 +41,7 @@ class Database {
         } = data;
 
         // Create the model object
-        const authorsResults = new this.AuthorsResults({
+        const authorsResults = AuthorsResults({
           owner,
           repo,
           date,
@@ -69,24 +64,21 @@ class Database {
     });
   }
 
+  /**
+   * Get data from the database.
+   * @param {String} owner The repo's owner.
+   * @param {String} repo The repository.
+   */
   getAuthorsResults(owner, repo) {
     return new Promise((resolve, reject) => {
       if (owner == null || repo == null) {
         reject();
       } else {
         // Find the the old authors results
-        this.AuthorsResults
+        AuthorsResults
           .find({
             owner,
             repo,
-          })
-          .select({
-            _id: 0,
-            __v: 0,
-          })
-          .sort({
-            date: -1,
-            start: -1,
           })
           .then((results) => {
             resolve(results);
@@ -96,6 +88,10 @@ class Database {
           });
       }
     });
+  }
+
+  close() {
+    this.db.close();
   }
 }
 

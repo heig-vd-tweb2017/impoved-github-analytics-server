@@ -74,6 +74,18 @@ You can install all the Node.js dependencies by using the following command in t
 npm install
 ```
 
+You will have the change the variables of the `test/local-development.json` to match your [generated token on GitHub for authentification](https://developer.github.com/v4/guides/forming-calls/#authenticating-with-graphql) as well as the repository's information you want to use for testing:
+
+```
+{
+    "port": 5151,
+    "token": "CHANGE_THIS",
+    "mongodbUri": "mongodb://0.0.0.0:27017/improved-github-analytics",
+    "owner": "CHANGE_THIS",
+    "repo": "CHANGE_THIS"
+}
+```
+
 You can then use the following commands to build and test the application after starting all the containers. Look at the `Deployment part`.
 
 ```

@@ -1,0 +1,7 @@
+{
+    "port": 5151,
+    "token": "CHANGE_THIS",
+    "mongodbUri": "mongodb://0.0.0.0:27017/improved-github-analytics",
+    "owner": "CHANGE_THIS",
+    "repo": "CHANGE_THIS"
+}

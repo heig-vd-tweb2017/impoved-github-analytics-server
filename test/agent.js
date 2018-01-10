@@ -1,42 +1,39 @@
+/*
+eslint class-methods-use-this: ["error", {
+  "exceptMethods": [
+    "emit"
+  ]
+}]
+*/
+
 const should = require('./chai-config.js');
-const credentials = require('../src/github-credentials.json');
+const { token, owner, repo } = require('./local-development.json');
 
 const Agent = require('../src/agent.js');
 
+class SocketMock {
+  emit(socketMessage, object) {
+    should.exist(socketMessage);
+    should.exist(object);
+  }
+}
+
 describe('Agent', () => {
-  it('should fetch opened issues', (done) => {
-    const owner = '2find';
-    const repo = 'stereo';
-    const agent = new Agent(credentials);
+  const agent = new Agent('https://api.github.com/graphql', token);
 
-    function sendData(err, issues) {
-      should.not.equal(issues, null);
-      issues.should.have.property('users');
-      issues.should.have.property('dates');
-    }
+  const dataAgeValue = 3;
+  const dataAgeUnit = 'months';
+  const socket = new SocketMock();
+  const socketMessage = 'AgentTest';
 
-    function endOfData() {
-      done();
-    }
-
-    agent.getOpenedIssues(owner, repo, sendData, endOfData);
-  });
-
-  it('should fetch closed issues', (done) => {
-    const owner = '2find';
-    const repo = 'stereo';
-    const agent = new Agent(credentials);
-
-    function sendData(err, issues) {
-      should.not.equal(issues, null);
-      issues.should.have.property('users');
-      issues.should.have.property('dates');
-    }
-
-    function endOfData() {
-      done();
-    }
-
-    agent.getClosedIssues(owner, repo, sendData, endOfData);
+  it('should retrieve data until the end of the stream', (done) => {
+    agent.getNumberOfIssuesByAuthors(owner, repo, dataAgeValue, dataAgeUnit, socket, socketMessage)
+      .then((data) => {
+        should.exist(data);
+        done();
+      })
+      .catch((err) => {
+        should.not.exist(err);
+      });
   });
 });

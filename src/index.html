@@ -5,7 +5,7 @@
   </head>
   <script src="https://improved-github-analytics-srv.herokuapp.com/socket.io/socket.io.js"></script>
   <script>
-    var socket = io();
+    var socket = io.connect('https://improved-github-analytics-srv.herokuapp.com');
 
     socket.emit('number-of-issues-by-authors', {
       owner: 'google',

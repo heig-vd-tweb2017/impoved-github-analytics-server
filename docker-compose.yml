@@ -7,7 +7,7 @@ services:
     container_name: 'app'
     environment:
       - PORT=5050
-      - TOKEN=CHANGE_THIS
+      - TOKEN=5e3e80f05d553be8a54ba9e415004faa8eeea3e8
       - MONGODB_URI=mongodb://mongodb:27017/improved-github-analytics
     working_dir: /home/node/app
     volumes:
