@@ -27,6 +27,8 @@ class Agent {
   getNumberOfIssuesByAuthors(owner, repo, dataAgeValue, dataAgeUnit, socket, socketMessage) {
     return new Promise((resolve, reject) => {
       const authors = [];
+      let totalOpenedIssues = 0;
+      let totalClosedIssues = 0;
 
       const oldestIssuesToFetch = moment().subtract(dataAgeValue, dataAgeUnit);
 
@@ -117,10 +119,12 @@ class Agent {
               });
             }
 
+            totalOpenedIssues += 1;
             authors.find(element => element.author === author).openedIssues += 1;
 
             // Only consider the closed issue if the date is valid
             if (moment(closedDate).isValid()) {
+              totalClosedIssues += 1;
               authors.find(element => element.author === author).closedIssues += 1;
             }
           });
@@ -148,6 +152,8 @@ class Agent {
             numberOfAuthors: authors.length,
             bestOpenedIssuesAuthors: bestOIAuthors,
             bestClosedIssuesAuthors: bestCIAuthors,
+            totalOpenedIssues,
+            totalClosedIssues,
           };
 
           // If there are more pages, retrieve and process them

@@ -57,6 +57,10 @@ Server side:
 ## Live testing
 You can test the entire application [here](https://heig-vd-tweb2017.github.io/improved-github-analytics-client/). Feel free to test it !
 
+or
+
+If you want to test the server, you can go [here](http://improved-github-analytics-srv.herokuapp.com/). Have a look at the source code as well as the console output to watch the results.
+
 ## Client's aspects
 For client's aspects, we encourage you to visit the associated repository [here](https://github.com/heig-vd-tweb2017/improved-github-analytics-client).
 

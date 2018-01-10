@@ -1,40 +1,112 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO test</title>
+    <title>Socket.IO example</title>
   </head>
   <script src="https://improved-github-analytics-srv.herokuapp.com/socket.io/socket.io.js"></script>
   <script>
-    var socket = io.connect('https://improved-github-analytics-srv.herokuapp.com');
+    // Wait that the DOM is ready
+    window.onload = () => {
+      // socket.io is imported using the 'src' just above
+      // You can specify on which server you want to listen to.
+      const socket = io.connect('https://improved-github-analytics-srv.herokuapp.com');
 
-    socket.emit('number-of-issues-by-authors', {
-      owner: 'google',
-      repo: 'WebFundamentals',
-      dataAgeValue: 2,
-      dataAgeUnit: 'months',
-    });
+      // This function will be called when the client receive the message 'number-of-issues-by-grouping-results' from the server.
+      // These data would be used for the graphics about opening/closing/average issues in the time.
+      socket.on('number-of-issues-by-grouping-results', (data) => {
+        console.log('Results for "number-of-issues-by-grouping-results" are: ');
+        console.log(data);
+      });
 
-    socket.on('number-of-issues-by-authors-results', (data) => {
-      console.log(data);
-    });
+      // This function will be called when the client receive the message 'number-of-issues-by-authors-results' from the server.
+      // These data would be used for the graphics about users/authors for best opening/closing rates.
+      socket.on('number-of-issues-by-authors-results', (data) => {
+        console.log('Results for "number-of-issues-by-authors-results" are: ');
+        console.log(data);
+      });
 
-    socket.on('number-of-issues-by-authors-old-results', (data) => {
-      console.log(data);
-    });
+      // This function will be called when the client receive the message 'number-of-issues-by-authors-old-results' from the server
+      // These data would be used for the old results tables about users/authors for best opening/closing rates.
+      // You will receive the data automatically when the message 'number-of-issues-by-authors' is sent to the server.
+      socket.on('number-of-issues-by-authors-old-results', (data) => {
+        console.log('Results for "number-of-issues-by-authors-old-results" are: ');
+        console.log(data);
+      });
 
-    socket.emit('number-of-issues-by-grouping', {
-      owner: 'google',
-      repo: 'WebFundamentals',
-      dataAgeValue: 2,
-      dataAgeUnit: 'weeks',
-      dataAgeGrouping: 'days',
-    });
+      // This function can be used to query the server by sending an object with the following fields:
+      // owner: the owner of the repository
+      // repo: the repository to analyze
+      // dataAgeValue: the value of the data age (ex. 4, 6, 8, 12)
+      // dataAgeUnit: the unit of the data age (ex. 'days', 'months', 'years')
+      document.getElementById('number-of-issues-by-authors').onclick = () => {
+        // You could get the data from specific fields
+        const owner = 'google';
+        const repo = 'WebFundamentals';
+        const dataAgeValue = 2;
+        const dataAgeUnit = 'months';
 
-    socket.on('number-of-issues-by-grouping-results', function (data) {
-      console.log(data);
-    });
+        // Pack the fields in one object
+        const data = {
+          owner,
+          repo,
+          dataAgeValue,
+          dataAgeUnit,
+        }
 
+        console.clear();
+        console.log('Query the server to get "number-of-issues-by-authors" with the following data:');
+        console.log(data);
+
+        // Send the object with the specific message to the server
+        socket.emit('number-of-issues-by-authors', data);
+      };
+      
+
+      // This function can be used to query the server by sending an object with the following fields:
+      // owner: the owner of the repository
+      // repo: the repository to analyze
+      // dataAgeValue: the value of the data age (ex. 4, 6, 8, 12)
+      // dataAgeUnit: the unit of the data age (ex. 'days', 'months', 'years')
+      // dataAgeGrouping: how to group the data. The supported values are 'days', 'weeks', 'months' and 'years'
+      document.getElementById('number-of-issues-by-grouping').onclick = () => {
+        // You could get the data from specific fields
+        const owner = 'google';
+        const repo = 'WebFundamentals';
+        const dataAgeValue = 2;
+        const dataAgeUnit = 'months';
+        const dataAgeGrouping = 'days';
+
+        // Pack the fields in one object
+        const data = {
+          owner,
+          repo,
+          dataAgeValue,
+          dataAgeUnit,
+          dataAgeGrouping,
+        }
+
+        console.clear();
+        console.log('Query the server to get "number-of-issues-by-grouping" with the following data:');
+        console.log(data);
+
+        // Send the object with the specific message to the server
+        socket.emit('number-of-issues-by-grouping', data);
+      };
+    };
   </script>
   <body>
+    <h1>Socket.IO example</h1>
+    <p>
+      <i>Right-click -> View page source</i> to review the code and comments.
+    </p>
+    <p>
+      <i>CTRL + MAJ + C</i> to open the developper console to watch the responses from the server.
+    </p>
+    <p>
+      <button id='number-of-issues-by-authors'>Get number of issues by authors</button>
+    </p>
+    <p>
+      <button id='number-of-issues-by-grouping'>Get number of issues by grouping</button>
+    </p>
   </body>
 </html>
