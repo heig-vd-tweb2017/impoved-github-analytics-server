@@ -1,11 +1,20 @@
-# Project - Github Analytics
+# Project - Improved Github Analytics
 This project is conducted for the course "TWEB-2017", at HEIG-VD, Switzerland.
 
-* Teacher: Olivier Liechti.
-* Authors: Ludovic Delafontaine & Michela Zucca.
+* Teacher: Olivier Liechti
+* Authors: Ludovic Delafontaine & Michela Zucca
 
 ## Foreword
-This is an improved version of the original Github Analytics project you can find [here](https://github.com/heig-vd-tweb2017/github-analytics-server). The following elements have changed or have been improved:
+This is an improved version of the original Github Analytics project you can find [here](https://heig-vd-tweb2017.github.io/github-analytics-client). The following elements have changed or have been improved:
+
+Client side:
+
+* Use of [Yeoman](http://yeoman.io) to generate the folders structure
+* Use of [Grunt](https://gruntjs.com/) to pack and deploy the application
+* Use of [socket.io](https://socket.io/) to emit new results to the client
+* Use of [AngularJS](https://angularjs.org/) for the frontend
+
+Server side:
 
 * Use of [Javascript Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
 * Use of [GraphQL](http://graphql.org/) with the [GitHub API v4](https://developer.github.com/v4/)
@@ -17,7 +26,7 @@ More details can be found in the `How is it` section.
 
 ## What is this
 This project proposes to analyze a GitHub repository, especially on issues management:
-	
+
 * Time analysis of opened issues.
 * Time analysis of closed issues.
 * Time analysis of the ratio between opened and closed issues.
@@ -42,7 +51,15 @@ We think that the number of issues opened and the number of issues closed should
 ## How is this
 For this project, we used several librairies and technologies.
 
+Client side:
+
+* [ESLint](https://eslint.org/) for quality code control.
+* [socket.io](https://socket.io/) to receive and send from/to the client datas in real time.
+* [Moment.js](https://momentjs.com/) to manipulate times in JavaScript.
+* [Chart.js](http://www.chartjs.org/) to generate the charts.
+
 Server side:
+
 * [ESLint](https://eslint.org/) for quality code control.
 * [Node.js](https://nodejs.org/) for the server runtime engine.
 * [Express](http://expressjs.com/) for the WEB server.
@@ -59,7 +76,7 @@ You can test the entire application [here](https://heig-vd-tweb2017.github.io/im
 
 or
 
-If you want to test the server, you can go [here](http://improved-github-analytics-srv.herokuapp.com/). Have a look at the source code as well as the console output to watch the results.
+If you want to test the server, you can go [here](http://improved-github-analytics-srv.herokuapp.com). Have a look at the source code as well as the console output to watch the results.
 
 ## Client's aspects
 For client's aspects, we encourage you to visit the associated repository [here](https://github.com/heig-vd-tweb2017/improved-github-analytics-client).
