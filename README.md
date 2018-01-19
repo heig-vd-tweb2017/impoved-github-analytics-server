@@ -9,18 +9,18 @@ This is an improved version of the original Github Analytics project you can fin
 
 Client side:
 
-* Use of [Yeoman](http://yeoman.io) to generate the folders structure
-* Use of [Grunt](https://gruntjs.com/) to pack and deploy the application
-* Use of [socket.io](https://socket.io/) to emit new results to the client
-* Use of [AngularJS](https://angularjs.org/) for the frontend
+* Use of [Yeoman](http://yeoman.io) to generate the folders structure.
+* Use of [Grunt](https://gruntjs.com/) to pack and deploy the application.
+* Use of [socket.io](https://socket.io/) to emit new results to the client.
+* Use of [AngularJS](https://angularjs.org/) for the frontend.
 
 Server side:
 
-* Use of [Javascript Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
-* Use of [GraphQL](http://graphql.org/) with the [GitHub API v4](https://developer.github.com/v4/)
-* Use of [socket.io](https://socket.io/) to emit new results to the client
-* Use of [MongoDB](https://www.mongodb.com/) to save some results to the database for future usages
-* Use of [Docker Compose](https://docs.docker.com/compose/) to test the infrastructure locally
+* Use of [Javascript Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
+* Use of [GraphQL](http://graphql.org/) with the [GitHub API v4](https://developer.github.com/v4/).
+* Use of [socket.io](https://socket.io/) to emit new results to the client.
+* Use of [MongoDB](https://www.mongodb.com/) to save some results to the database for future usages.
+* Use of [Docker Compose](https://docs.docker.com/compose/) to test the infrastructure locally.
 
 More details can be found in the `How is it` section.
 
@@ -57,6 +57,9 @@ Client side:
 * [socket.io](https://socket.io/) to receive and send from/to the client datas in real time.
 * [Moment.js](https://momentjs.com/) to manipulate times in JavaScript.
 * [Chart.js](http://www.chartjs.org/) to generate the charts.
+* [Yeoman](http://yeoman.io) to generate the folders structure.
+* [Grunt](https://gruntjs.com/) to pack and deploy the application.
+* [AngularJS](https://angularjs.org/) for the frontend.
 
 Server side:
 
